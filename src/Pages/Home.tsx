@@ -1,7 +1,11 @@
-import React from "react";
+import Secondslider from "../components/Secondslider";
 
 const Home = () => {
-  return <div>Home</div>;
+  return (
+    <div>
+      <Secondslider />
+    </div>
+  );
 };
 
 export default Home;
