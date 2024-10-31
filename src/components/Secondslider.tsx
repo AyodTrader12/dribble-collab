@@ -6,12 +6,7 @@ import print from "../assets/secondsliderpics/Print.jpeg";
 import Product from "../assets/secondsliderpics/ProductDesign.png";
 import typography from "../assets/secondsliderpics/typography.jpeg";
 import webdesign from "../assets/secondsliderpics/webdesign.png";
-import {
-  motion,
-  AnimatePresence,
-  useMotionValue,
-  animate,
-} from "framer-motion";
+import { motion, useMotionValue, animate } from "framer-motion";
 import { useState, useEffect } from "react";
 import useMeasure from "react-use-measure"; // Ensure you import this hook
 
@@ -32,29 +27,16 @@ const SecondSlider = () => {
   const [ref, { width }] = useMeasure(); // Measure the container width
   const xMovement = useMotionValue(0);
 
-  const SLOW = 80; // Slower speed on hover
-  const FAST = 30; // Faster speed by default
-
+  const FAST = 60; // Animation speed by default
   const [duration, setDuration] = useState(FAST); // Control animation speed
-  const [finished, setFinished] = useState(false); // To toggle animation state
   const [render, setRender] = useState(false); // To re-render after each loop
+  const [isPaused, setIsPaused] = useState(false); // Track hover state to pause animation
 
   useEffect(() => {
-    let control;
     const finalPosition = -width / 2 - 8;
+    let control;
 
-    if (finished) {
-      // Smooth transition to final position
-      control = animate(xMovement, [xMovement.get(), finalPosition], {
-        ease: "linear",
-        duration: duration * (1 - xMovement.get() / finalPosition),
-        onComplete: () => {
-          setRender(!render);
-          setFinished(false);
-        },
-      });
-    } else {
-      // Looping animation for continuous scroll
+    if (!isPaused) {
       control = animate(xMovement, [0, finalPosition], {
         ease: "linear",
         duration: duration,
@@ -65,22 +47,18 @@ const SecondSlider = () => {
           xMovement.set(finalPosition); // Reset position after each loop
         },
       });
+    } else {
+      control?.stop();
     }
 
     return () => control?.stop();
-  }, [xMovement, width, duration, render, finished]);
+  }, [xMovement, width, duration, render, isPaused]);
 
   return (
     <div className="overflow-hidden mt-10">
       <motion.div
-        onHoverStart={() => {
-          setDuration(SLOW); // Slow down on hover
-          setFinished(true);
-        }}
-        onHoverEnd={() => {
-          setDuration(FAST); // Resume speed after hover
-          setFinished(false);
-        }}
+        onHoverStart={() => setIsPaused(true)} // Pause animation on hover
+        onHoverEnd={() => setIsPaused(false)} // Resume animation when hover ends
         ref={ref}
         style={{ x: xMovement }}
         className="flex w-max gap-4"
@@ -96,44 +74,23 @@ const SecondSlider = () => {
 export default SecondSlider;
 
 interface iProps {
-  el: { id: number; picture: string; note: string }; // Update to reflect the actual structure
+  el: { id: number; picture: string; note: string };
 }
 
 const Card: React.FC<iProps> = ({ el }) => {
-  const [hover, setHover] = useState(false);
-
   return (
     <motion.div
-      onHoverStart={() => setHover(true)}
-      onHoverEnd={() => setHover(false)}
-      className="border overflow-hidden rounded-md w-[300px] h-[600px] cursor-pointer relative"
+      whileHover={{ boxShadow: "0px 0px 7px 4px rgba(0, 0, 0, 0.2)" }} // Only box shadow on hover
+      className=" overflow-hidden rounded-md w-[200px] h-[200px] cursor-pointer relative"
     >
-      <AnimatePresence>
-        {hover && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute h-full w-full flex justify-center items-center"
-          >
-            <div className="absolute inset-0 h-full w-full bg-black opacity-45 top-0 left-0 z-20" />
-            <motion.div
-              initial={{ y: 10 }}
-              animate={{ y: 0 }}
-              exit={{ y: 10 }}
-              className="w-[80%] h-[100px] rounded-md bg-white p-2 z-40"
-            >
-              {el.note} {/* Use note for meaningful text */}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <img
-        src={el.picture}
-        alt={el.note}
-        className="w-full h-full object-cover"
-      />{" "}
-      {/* Use meaningful alt text */}
+      <div className="">
+        <img
+          src={el.picture}
+          alt={el.note}
+          className="w-full h-full object-cover rounded-lg"
+        />
+        <p className="text-[13px] font-bold mt-2">{el.note}</p>
+      </div>
     </motion.div>
   );
 };
